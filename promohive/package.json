@@ -59,7 +59,10 @@
   "scripts": {
     "start": "vite",
     "build": "vite build --sourcemap",
-    "serve": "vite preview"
+    "serve": "vite preview",
+    "ci:build": "pnpm install && pnpm run build",
+    "deploy:netlify": "netlify deploy --prod --dir build --message \"Deploy from npm script\"",
+    "deploy:preview": "netlify deploy --dir build --message \"Preview deploy from npm script\""
   },
   "eslintConfig": {
     "extends": [
