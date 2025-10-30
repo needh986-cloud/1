@@ -30,14 +30,15 @@ serve(async (req) => {
       SUPABASE_SERVICE_ROLE_KEY!
     );
     
-    // Fetch offers from AdGem API
-    // Note: Replace this URL with the actual AdGem API endpoint
+    // Fetch offers from AdGem Reporting API
+    // Using the offerwall endpoint to get available offers
     const adgemResponse = await fetch(
-      `https://api.adgem.com/v1/publisher/${ADGEM_PUBLISHER_ID}/offers`,
+      `https://api.adgem.com/v1/offers?appid=${ADGEM_PUBLISHER_ID}`,
       {
         headers: {
           'Authorization': `Bearer ${ADGEM_API_KEY}`,
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
         }
       }
     );
@@ -63,20 +64,23 @@ serve(async (req) => {
           .single();
         
         const offerData = {
-          external_id: offer.id,
-          title: offer.name || offer.title,
-          description: offer.description,
-          real_value: parseFloat(offer.payout || 0),
-          currency: offer.currency || 'USD',
-          countries: offer.countries || [],
-          device_types: offer.device_types || ['mobile', 'desktop'],
-          category: offer.category || 'general',
-          external_url: offer.click_url || offer.url,
+          external_id: String(offer.id || offer.offer_id),
+          title: offer.name || offer.title || offer.offer_name,
+          description: offer.description || offer.instructions || '',
+          real_value: parseFloat(offer.payout || offer.amount || 0),
+          currency: 'USD',
+          countries: offer.countries || offer.geos || [],
+          device_types: offer.platforms || offer.device_types || ['mobile', 'desktop'],
+          category: offer.category || offer.vertical || 'general',
+          external_url: `https://api.adgem.com/v1/wall?appid=31283&playerid={USER_ID}&offerid=${offer.id}`,
           requirements: {
-            min_level: offer.min_level || 0,
+            min_level: 0,
+            offer_type: offer.offer_type,
+            epc: offer.epc,
+            conversion_flow: offer.conversion_flow,
             ...offer.requirements
           },
-          is_active: offer.status === 'active',
+          is_active: true,
           updated_at: new Date().toISOString()
         };
         
