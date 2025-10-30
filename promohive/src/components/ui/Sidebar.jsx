@@ -2,21 +2,11 @@ import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import Icon from '../AppIcon';
 import Button from './Button';
+import { useAuth } from '../../contexts/AuthContext';
 
 const Sidebar = ({ isCollapsed = false, onToggle, className = '' }) => {
-  const [user, setUser] = useState(null);
+  const { user, profile, isAdmin } = useAuth();
   const location = useLocation();
-
-  useEffect(() => {
-    // Simulate user data - in real app, get from auth context
-    const userData = {
-      name: 'John Doe',
-      email: 'john@promohive.com',
-      role: 'user', // or 'admin'
-      balance: 1250.75
-    };
-    setUser(userData);
-  }, []);
 
   const isAuthPage = location?.pathname === '/login' || location?.pathname === '/register';
 
@@ -24,11 +14,40 @@ const Sidebar = ({ isCollapsed = false, onToggle, className = '' }) => {
     return null;
   }
 
+  // Admin navigation items (shown first if user is admin)
+  const adminNavItems = isAdmin() ? [
+    {
+      label: 'Admin Dashboard',
+      icon: 'Shield',
+      path: '/admin-dashboard',
+      gradient: true
+    },
+    {
+      label: 'Admin Settings',
+      icon: 'Settings',
+      path: '/admin-settings',
+      gradient: true
+    },
+    {
+      label: 'Users Management',
+      icon: 'Users',
+      path: '/users-management',
+      gradient: true
+    },
+    {
+      label: 'Proofs Review',
+      icon: 'Eye',
+      path: '/proofs-review',
+      gradient: true
+    }
+  ] : [];
+
   const navigationItems = [
+    ...adminNavItems,
     {
       label: 'Dashboard',
       icon: 'LayoutDashboard',
-      path: user?.role === 'admin' ? '/admin-dashboard' : '/user-dashboard',
+      path: '/user-dashboard',
       roles: ['user', 'admin']
     },
     {
