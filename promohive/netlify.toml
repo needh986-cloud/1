@@ -12,13 +12,11 @@
 [build.environment]
   NODE_VERSION = "18"
 
-# Redirect rules for SPA
+# Redirect rules for SPA (React Router)
 [[redirects]]
   from = "/*"
   to = "/index.html"
   status = 200
-  force = false
-  conditions = { Role = [] }
 
 # Security headers
 [[headers]]
