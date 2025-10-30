@@ -2,6 +2,7 @@ import React from "react";
 import { BrowserRouter, Routes as RouterRoutes, Route } from "react-router-dom";
 import ScrollToTop from "components/ScrollToTop";
 import ErrorBoundary from "components/ErrorBoundary";
+import ProtectedRoute from "components/ProtectedRoute";
 import NotFound from "pages/NotFound";
 import AdminDashboard from './pages/admin-dashboard';
 import ProofsReview from './pages/proofs-review';
@@ -25,23 +26,29 @@ const Routes = () => {
       <ErrorBoundary>
       <ScrollToTop />
       <RouterRoutes>
-        {/* Define your route here */}
+        {/* Public routes */}
         <Route path="/" element={<LoginPage />} />
-        <Route path="/admin-dashboard" element={<AdminDashboard />} />
-        <Route path="/proofs-review" element={<ProofsReview />} />
         <Route path="/login" element={<LoginPage />} />
-        <Route path="/user-dashboard" element={<UserDashboard />} />
-        <Route path="/withdrawals-processing" element={<WithdrawalsProcessing />} />
-        <Route path="/daily-spin-wheel" element={<DailySpinWheel />} />
-        <Route path="/task-details" element={<TaskDetails />} />
-        <Route path="/referrals-management" element={<ReferralsManagement />} />
-        <Route path="/wallet-overview" element={<WalletOverview />} />
-        <Route path="/proofs-management" element={<ProofsManagement />} />
-        <Route path="/users-management" element={<UsersManagement />} />
-        <Route path="/withdrawal-request" element={<WithdrawalRequest />} />
-        <Route path="/profile-settings" element={<ProfileSettings />} />
         <Route path="/register" element={<Register />} />
-        <Route path="/tasks-list" element={<TasksList />} />
+        
+        {/* Admin routes - require admin role */}
+        <Route path="/admin-dashboard" element={<ProtectedRoute requireAdmin={true}><AdminDashboard /></ProtectedRoute>} />
+        <Route path="/proofs-review" element={<ProtectedRoute requireAdmin={true}><ProofsReview /></ProtectedRoute>} />
+        <Route path="/withdrawals-processing" element={<ProtectedRoute requireAdmin={true}><WithdrawalsProcessing /></ProtectedRoute>} />
+        <Route path="/users-management" element={<ProtectedRoute requireAdmin={true}><UsersManagement /></ProtectedRoute>} />
+        
+        {/* User routes - require authentication only */}
+        <Route path="/user-dashboard" element={<ProtectedRoute><UserDashboard /></ProtectedRoute>} />
+        <Route path="/daily-spin-wheel" element={<ProtectedRoute><DailySpinWheel /></ProtectedRoute>} />
+        <Route path="/task-details" element={<ProtectedRoute><TaskDetails /></ProtectedRoute>} />
+        <Route path="/tasks-list" element={<ProtectedRoute><TasksList /></ProtectedRoute>} />
+        <Route path="/referrals-management" element={<ProtectedRoute><ReferralsManagement /></ProtectedRoute>} />
+        <Route path="/wallet-overview" element={<ProtectedRoute><WalletOverview /></ProtectedRoute>} />
+        <Route path="/proofs-management" element={<ProtectedRoute><ProofsManagement /></ProtectedRoute>} />
+        <Route path="/withdrawal-request" element={<ProtectedRoute><WithdrawalRequest /></ProtectedRoute>} />
+        <Route path="/profile-settings" element={<ProtectedRoute><ProfileSettings /></ProtectedRoute>} />
+        
+        {/* 404 */}
         <Route path="*" element={<NotFound />} />
       </RouterRoutes>
       </ErrorBoundary>
