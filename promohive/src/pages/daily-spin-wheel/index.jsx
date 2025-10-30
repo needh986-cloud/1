@@ -1,318 +1,331 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Helmet } from 'react-helmet';
 import Icon from '../../components/AppIcon';
-import Button from '../../components/ui/Button';
-import SpinWheel from './components/SpinWheel';
-import UsageInfo from './components/UsageInfo';
-import PrizeHistory from './components/PrizeHistory';
-import WinCelebration from './components/WinCelebration';
-import RulesInfo from './components/RulesInfo';
+import { spinWheelService } from '../../services/spinWheelService';
+import { useAuth } from '../../contexts/AuthContext';
+import { Link } from 'react-router-dom';
 
 const DailySpinWheel = () => {
-  const [user, setUser] = useState(null);
-  const [spinData, setSpinData] = useState({
-    remainingSpins: 3,
-    maxSpins: 3,
-    nextResetTime: new Date(Date.now() + 24 * 60 * 60 * 1000)?.toISOString()
-  });
-  const [isSpinning, setIsSpinning] = useState(false);
-  const [winHistory, setWinHistory] = useState([]);
-  const [showCelebration, setShowCelebration] = useState(false);
-  const [currentWin, setCurrentWin] = useState(null);
-
-  // Mock prizes data
-  const prizes = [
-    { 
-      amount: 0.50, 
-      type: 'cash', 
-      icon: 'DollarSign',
-      description: "Nice! You\'ve won $0.50 cash prize!"
-    },
-    { 
-      amount: 2.00, 
-      type: 'bonus', 
-      icon: 'Star',
-      description: "Great! You\'ve won a $2.00 bonus prize!"
-    },
-    { 
-      amount: 1.00, 
-      type: 'cash', 
-      icon: 'DollarSign',
-      description: "Awesome! You\'ve won $1.00 cash prize!"
-    },
-    { 
-      amount: 5.00, 
-      type: 'multiplier', 
-      icon: 'Zap', 
-      multiplier: 2,
-      description: "Amazing! You\'ve won $5.00 with a 2x multiplier!"
-    },
-    { 
-      amount: 0.25, 
-      type: 'cash', 
-      icon: 'DollarSign',
-      description: "You\'ve won $0.25 cash prize!"
-    },
-    { 
-      amount: 10.00, 
-      type: 'special', 
-      icon: 'Gift',
-      description: "Incredible! You\'ve won a special $10.00 prize!"
-    },
-    { 
-      amount: 0.75, 
-      type: 'cash', 
-      icon: 'DollarSign',
-      description: "Good job! You\'ve won $0.75 cash prize!"
-    },
-    { 
-      amount: 3.00, 
-      type: 'bonus', 
-      icon: 'Star',
-      description: "Excellent! You\'ve won a $3.00 bonus prize!"
-    }
-  ];
+  const { user } = useAuth();
+  const [canSpin, setCanSpin] = useState(false);
+  const [spinning, setSpinning] = useState(false);
+  const [result, setResult] = useState(null);
+  const [todayWinnings, setTodayWinnings] = useState(0);
+  const [history, setHistory] = useState([]);
+  const [stats, setStats] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [rotation, setRotation] = useState(0);
 
   useEffect(() => {
-    // Simulate user data
-    const userData = {
-      id: 1,
-      name: 'John Doe',
-      email: 'john@promohive.com',
-      balance: 1250.75,
-      totalEarnings: 2847.50
-    };
-    setUser(userData);
-
-    // Load existing win history from localStorage or use mock data
-    const savedHistory = localStorage.getItem('spinWinHistory');
-    if (savedHistory) {
-      setWinHistory(JSON.parse(savedHistory));
-    } else {
-      // Mock recent wins
-      const mockHistory = [
-        {
-          amount: 2.50,
-          type: 'bonus',
-          timestamp: new Date(Date.now() - 2 * 60 * 60 * 1000)?.toISOString(),
-          multiplier: null
-        },
-        {
-          amount: 0.75,
-          type: 'cash',
-          timestamp: new Date(Date.now() - 4 * 60 * 60 * 1000)?.toISOString(),
-          multiplier: null
-        }
-      ];
-      setWinHistory(mockHistory);
+    if (user?.id) {
+      loadData();
     }
+  }, [user?.id]);
 
-    // Load spin data from localStorage
-    const savedSpinData = localStorage.getItem('dailySpinData');
-    if (savedSpinData) {
-      const parsed = JSON.parse(savedSpinData);
-      const now = new Date();
-      const resetTime = new Date(parsed.nextResetTime);
+  const loadData = async () => {
+    setLoading(true);
+    await Promise.all([
+      checkSpinEligibility(),
+      loadTodayWinnings(),
+      loadHistory(),
+      loadStats()
+    ]);
+    setLoading(false);
+  };
+
+  const checkSpinEligibility = async () => {
+    const { canSpin: eligible } = await spinWheelService.canSpinToday(user.id);
+    setCanSpin(eligible);
+  };
+
+  const loadTodayWinnings = async () => {
+    const { total } = await spinWheelService.getTodayWinnings(user.id);
+    setTodayWinnings(total);
+  };
+
+  const loadHistory = async () => {
+    const { history: data } = await spinWheelService.getSpinHistory(user.id, 10);
+    setHistory(data || []);
+  };
+
+  const loadStats = async () => {
+    const { stats: data } = await spinWheelService.getSpinStats(user.id);
+    setStats(data);
+  };
+
+  const handleSpin = async () => {
+    if (!canSpin || spinning) return;
+
+    setSpinning(true);
+    setResult(null);
+
+    // Animate wheel spinning
+    const spins = 5 + Math.random() * 3; // 5-8 full rotations
+    const finalRotation = rotation + (360 * spins);
+    setRotation(finalRotation);
+
+    // Wait for animation
+    setTimeout(async () => {
+      const { result: spinResult } = await spinWheelService.processSpin(user.id);
+      setResult(spinResult);
+      setSpinning(false);
       
-      // Check if it's a new day
-      if (now >= resetTime) {
-        // Reset spins for new day
-        const newResetTime = new Date(now);
-        newResetTime?.setDate(newResetTime?.getDate() + 1);
-        newResetTime?.setHours(0, 0, 0, 0);
-        
-        const newSpinData = {
-          remainingSpins: 3,
-          maxSpins: 3,
-          nextResetTime: newResetTime?.toISOString()
-        };
-        setSpinData(newSpinData);
-        localStorage.setItem('dailySpinData', JSON.stringify(newSpinData));
-        
-        // Clear history for new day
-        setWinHistory([]);
-        localStorage.removeItem('spinWinHistory');
-      } else {
-        setSpinData(parsed);
+      if (spinResult?.success) {
+        setCanSpin(false);
+        await loadData();
       }
-    }
-  }, []);
-
-  const handleSpin = (winningPrize) => {
-    if (spinData?.remainingSpins <= 0) return;
-
-    setIsSpinning(true);
-
-    // Simulate spin delay
-    setTimeout(() => {
-      const newWin = {
-        ...winningPrize,
-        timestamp: new Date()?.toISOString()
-      };
-
-      // Update win history
-      const updatedHistory = [newWin, ...winHistory];
-      setWinHistory(updatedHistory);
-      localStorage.setItem('spinWinHistory', JSON.stringify(updatedHistory));
-
-      // Update remaining spins
-      const updatedSpinData = {
-        ...spinData,
-        remainingSpins: spinData?.remainingSpins - 1
-      };
-      setSpinData(updatedSpinData);
-      localStorage.setItem('dailySpinData', JSON.stringify(updatedSpinData));
-
-      // Update user balance (in real app, this would be an API call)
-      setUser(prev => ({
-        ...prev,
-        balance: prev?.balance + winningPrize?.amount,
-        totalEarnings: prev?.totalEarnings + winningPrize?.amount
-      }));
-
-      // Show celebration
-      setCurrentWin(newWin);
-      setShowCelebration(true);
-      setIsSpinning(false);
-    }, 4000);
+    }, 3000);
   };
 
-  const closeCelebration = () => {
-    setShowCelebration(false);
-    setCurrentWin(null);
-  };
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
-      {/* Background Effects */}
-      <div className="fixed inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute -top-40 -right-40 w-80 h-80 bg-primary/20 rounded-full blur-3xl animate-pulse"></div>
-        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-secondary/20 rounded-full blur-3xl animate-pulse delay-1000"></div>
-      </div>
-      <div className="relative z-10 pt-20 pb-12 px-4 sm:px-6 lg:px-8">
-        {/* Header */}
-        <div className="max-w-4xl mx-auto text-center mb-8">
-          <div className="flex items-center justify-center space-x-3 mb-4">
-            <div className="w-12 h-12 bg-gradient-primary rounded-xl flex items-center justify-center">
-              <Icon name="RotateCcw" size={24} color="white" />
+    <>
+      <Helmet>
+        <title>Daily Spin Wheel - PromoHive</title>
+      </Helmet>
+
+      <div className="min-h-screen bg-background p-6">
+        <div className="max-w-6xl mx-auto">
+          {/* Header */}
+          <div className="flex items-center justify-between mb-8">
+            <div>
+              <h1 className="text-3xl font-bold text-foreground flex items-center gap-3">
+                <span className="text-4xl">🎰</span>
+                Daily Spin Wheel
+              </h1>
+              <p className="text-text-secondary mt-2">
+                Spin once per day and win up to $0.30!
+              </p>
             </div>
-            <h1 className="text-3xl sm:text-4xl font-bold gradient-text">
-              Daily Spin Wheel
-            </h1>
-          </div>
-          <p className="text-lg text-text-secondary max-w-2xl mx-auto">
-            Spin the wheel daily for amazing prizes! Win cash rewards, bonuses, and special multipliers.
-          </p>
-        </div>
-
-        {/* Breadcrumb */}
-        <div className="max-w-4xl mx-auto mb-8">
-          <nav className="flex items-center space-x-2 text-sm">
-            <Link to="/user-dashboard" className="text-text-secondary hover:text-primary transition-colors">
-              Dashboard
+            <Link
+              to="/user-dashboard"
+              className="flex items-center gap-2 px-4 py-2 bg-muted hover:bg-muted/80 rounded-lg transition"
+            >
+              <Icon name="ArrowLeft" size={20} />
+              Back to Dashboard
             </Link>
-            <Icon name="ChevronRight" size={14} className="text-text-secondary" />
-            <span className="text-foreground font-medium">Daily Spin Wheel</span>
-          </nav>
-        </div>
-
-        {/* Main Content */}
-        <div className="max-w-4xl mx-auto space-y-8">
-          {/* Usage Information */}
-          <UsageInfo 
-            remainingSpins={spinData?.remainingSpins}
-            maxSpins={spinData?.maxSpins}
-            nextResetTime={spinData?.nextResetTime}
-          />
-
-          {/* Spin Wheel */}
-          <div className="flex justify-center">
-            <SpinWheel
-              prizes={prizes}
-              onSpin={handleSpin}
-              isSpinning={isSpinning}
-              canSpin={spinData?.remainingSpins > 0}
-            />
           </div>
 
-          {/* Current Balance Display */}
-          {user && (
-            <div className="flex justify-center">
-              <div className="glass rounded-xl p-6 border border-border">
-                <div className="text-center">
-                  <p className="text-sm text-text-secondary mb-2">Current Balance</p>
-                  <div className="flex items-center justify-center space-x-2">
-                    <Icon name="Wallet" size={20} className="text-success" />
-                    <span className="text-2xl font-bold text-success font-data">
-                      ${user?.balance?.toFixed(2)}
-                    </span>
+          <div className="grid lg:grid-cols-3 gap-6">
+            {/* Main Wheel Section */}
+            <div className="lg:col-span-2 space-y-6">
+              {/* Today's Winnings */}
+              <div className="glass rounded-xl p-6 text-center bg-gradient-to-br from-primary/10 to-secondary/10">
+                <p className="text-text-secondary mb-2">Today's Winnings</p>
+                <p className="text-5xl font-bold text-success mb-2">
+                  ${todayWinnings.toFixed(2)}
+                </p>
+                <p className="text-sm text-text-secondary">
+                  Maximum: $0.30 per day
+                </p>
+                {todayWinnings >= 0.30 && (
+                  <div className="mt-3 p-2 bg-warning/20 rounded-lg">
+                    <p className="text-sm text-warning">
+                      You've reached today's maximum! Come back tomorrow.
+                    </p>
                   </div>
-                  <p className="text-xs text-text-secondary mt-2">
-                    Total Earnings: ${user?.totalEarnings?.toFixed(2)}
-                  </p>
+                )}
+              </div>
+
+              {/* Wheel */}
+              <div className="glass rounded-xl p-8">
+                <div className="relative">
+                  {/* Wheel Container */}
+                  <div className="relative w-80 h-80 mx-auto mb-8">
+                    {/* Pointer */}
+                    <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-2 z-10">
+                      <div className="w-0 h-0 border-l-8 border-r-8 border-t-12 border-transparent border-t-destructive"></div>
+                    </div>
+
+                    {/* Wheel */}
+                    <div
+                      className={`relative w-full h-full rounded-full border-8 border-primary shadow-2xl transition-transform duration-3000 ease-out`}
+                      style={{
+                        transform: `rotate(${rotation}deg)`,
+                        background: 'conic-gradient(from 0deg, #6366f1 0deg 60deg, #8b5cf6 60deg 120deg, #ec4899 120deg 180deg, #f59e0b 180deg 240deg, #10b981 240deg 300deg, #3b82f6 300deg 360deg)'
+                      }}
+                    >
+                      {/* Center Circle */}
+                      <div className="absolute inset-0 flex items-center justify-center">
+                        <div className="w-20 h-20 bg-background rounded-full shadow-lg flex items-center justify-center">
+                          <span className="text-4xl">🎁</span>
+                        </div>
+                      </div>
+
+                      {/* Prize Labels */}
+                      {[0.05, 0.10, 0.15, 0.20, 0.25, 0.30].map((prize, i) => (
+                        <div
+                          key={i}
+                          className="absolute top-1/2 left-1/2 origin-left text-white font-bold"
+                          style={{
+                            transform: `rotate(${i * 60 + 30}deg) translateX(100px)`,
+                          }}
+                        >
+                          ${prize}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Spin Button */}
+                  <div className="text-center">
+                    {canSpin ? (
+                      <button
+                        onClick={handleSpin}
+                        disabled={spinning}
+                        className={`px-12 py-4 text-xl font-bold rounded-xl transition-all ${
+                          spinning
+                            ? 'bg-muted text-text-secondary cursor-not-allowed'
+                            : 'bg-gradient-primary text-white hover:scale-105 shadow-lg hover:shadow-xl'
+                        }`}
+                      >
+                        {spinning ? (
+                          <span className="flex items-center gap-3">
+                            <Icon name="Loader" size={24} className="animate-spin" />
+                            Spinning...
+                          </span>
+                        ) : (
+                          <span className="flex items-center gap-3">
+                            <span>🎰</span>
+                            SPIN NOW!
+                          </span>
+                        )}
+                      </button>
+                    ) : (
+                      <div className="space-y-3">
+                        <div className="p-4 bg-muted rounded-lg">
+                          <p className="text-lg font-semibold text-text-secondary">
+                            You've used your spin for today
+                          </p>
+                          <p className="text-sm text-text-secondary mt-1">
+                            Come back tomorrow for another chance!
+                          </p>
+                        </div>
+                        <p className="text-xs text-text-secondary">
+                          Resets at midnight (your local time)
+                        </p>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Result */}
+                  {result && result.success && (
+                    <div className="mt-6 p-6 bg-success/20 rounded-xl text-center animate-bounce">
+                      <p className="text-3xl font-bold text-success mb-2">
+                        🎉 Congratulations!
+                      </p>
+                      <p className="text-2xl font-bold text-success">
+                        You won ${result.prize}!
+                      </p>
+                      <p className="text-sm text-text-secondary mt-2">
+                        Added to your balance
+                      </p>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
-          )}
 
-          {/* Prize History */}
-          <PrizeHistory history={winHistory} />
+            {/* Sidebar */}
+            <div className="space-y-6">
+              {/* Stats */}
+              {stats && (
+                <div className="glass rounded-xl p-6">
+                  <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+                    <Icon name="TrendingUp" size={20} />
+                    Your Stats
+                  </h3>
+                  <div className="space-y-3">
+                    <div className="flex justify-between">
+                      <span className="text-text-secondary">Total Spins</span>
+                      <span className="font-bold">{stats.totalSpins}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-text-secondary">Total Won</span>
+                      <span className="font-bold text-success">
+                        ${stats.totalWon.toFixed(2)}
+                      </span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-text-secondary">Average Win</span>
+                      <span className="font-bold">
+                        ${stats.averageWin.toFixed(2)}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              )}
 
-          {/* Rules and Information */}
-          <RulesInfo />
-
-          {/* Action Buttons */}
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link to="/wallet-overview">
-              <Button variant="outline" className="w-full sm:w-auto">
-                <Icon name="Wallet" size={16} className="mr-2" />
-                View Wallet
-              </Button>
-            </Link>
-            <Link to="/user-dashboard">
-              <Button variant="outline" className="w-full sm:w-auto">
-                <Icon name="Home" size={16} className="mr-2" />
-                Back to Dashboard
-              </Button>
-            </Link>
-          </div>
-
-          {/* Tips Section */}
-          <div className="glass rounded-xl p-6 border border-border">
-            <h3 className="text-lg font-semibold text-foreground mb-4 flex items-center space-x-2">
-              <Icon name="Lightbulb" size={20} className="text-warning" />
-              <span>Pro Tips</span>
-            </h3>
-            <div className="grid sm:grid-cols-2 gap-4">
-              <div className="flex items-start space-x-3">
-                <Icon name="Clock" size={16} className="text-primary mt-1" />
-                <div>
-                  <p className="font-medium text-foreground">Daily Routine</p>
-                  <p className="text-sm text-text-secondary">
-                    Visit daily to maximize your earning potential with free spins.
-                  </p>
+              {/* Recent History */}
+              <div className="glass rounded-xl p-6">
+                <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+                  <Icon name="History" size={20} />
+                  Recent Spins
+                </h3>
+                <div className="space-y-2">
+                  {history.length > 0 ? (
+                    history.slice(0, 5).map((spin, i) => (
+                      <div
+                        key={spin.id}
+                        className="flex justify-between items-center p-2 bg-muted rounded-lg"
+                      >
+                        <span className="text-sm text-text-secondary">
+                          {new Date(spin.created_at).toLocaleDateString()}
+                        </span>
+                        <span className="font-bold text-success">
+                          +${parseFloat(spin.prize_amount).toFixed(2)}
+                        </span>
+                      </div>
+                    ))
+                  ) : (
+                    <p className="text-sm text-text-secondary text-center py-4">
+                      No spins yet. Try your luck!
+                    </p>
+                  )}
                 </div>
               </div>
-              <div className="flex items-start space-x-3">
-                <Icon name="Target" size={16} className="text-success mt-1" />
-                <div>
-                  <p className="font-medium text-foreground">Complete Tasks</p>
-                  <p className="text-sm text-text-secondary">
-                    Bonus multipliers from spins apply to your next task rewards.
-                  </p>
-                </div>
+
+              {/* How it Works */}
+              <div className="glass rounded-xl p-6">
+                <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+                  <Icon name="HelpCircle" size={20} />
+                  How it Works
+                </h3>
+                <ul className="space-y-2 text-sm text-text-secondary">
+                  <li className="flex items-start gap-2">
+                    <Icon name="Check" size={16} className="text-success mt-0.5" />
+                    <span>Spin once per day</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <Icon name="Check" size={16} className="text-success mt-0.5" />
+                    <span>Win between $0.05 - $0.30</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <Icon name="Check" size={16} className="text-success mt-0.5" />
+                    <span>Maximum $0.30 per day</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <Icon name="Check" size={16} className="text-success mt-0.5" />
+                    <span>Winnings added instantly</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <Icon name="Check" size={16} className="text-success mt-0.5" />
+                    <span>Resets at midnight</span>
+                  </li>
+                </ul>
               </div>
             </div>
           </div>
         </div>
       </div>
-      {/* Win Celebration Modal */}
-      <WinCelebration
-        prize={currentWin}
-        isVisible={showCelebration}
-        onClose={closeCelebration}
-      />
-    </div>
+    </>
   );
 };
 
