@@ -30,6 +30,7 @@ export const authService = {
         email,
         password,
         options: {
+          emailRedirectTo: `${window.location?.origin}/login`,
           data: {
             full_name: metadata?.fullName || '',
             role: metadata?.role || 'user',
