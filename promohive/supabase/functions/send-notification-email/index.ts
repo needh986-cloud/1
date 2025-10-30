@@ -1,4 +1,5 @@
 import { serve } from "https://deno.land/std@0.192.0/http/server.ts";
+import { SMTPClient } from "https://deno.land/x/denomailer@1.6.0/mod.ts";
 
 serve(async (req) => {
   // ✅ CORS preflight
@@ -15,11 +16,15 @@ serve(async (req) => {
   try {
     const { type, to, data } = await req?.json();
     
-    // Get SMTP settings from environment or use defaults
-    const RESEND_API_KEY = (globalThis as any)?.Deno?.env?.get('RESEND_API_KEY');
+    // Get SMTP settings from environment
+    const SMTP_HOST = (globalThis as any)?.Deno?.env?.get('SMTP_HOST') || 'smtp.hostinger.com';
+    const SMTP_PORT = parseInt((globalThis as any)?.Deno?.env?.get('SMTP_PORT') || '465');
+    const SMTP_USER = (globalThis as any)?.Deno?.env?.get('SMTP_USER') || 'promohive@globalpromonetwork.store';
+    const SMTP_PASS = (globalThis as any)?.Deno?.env?.get('SMTP_PASS');
+    const SMTP_FROM = (globalThis as any)?.Deno?.env?.get('SMTP_FROM') || 'promohive@globalpromonetwork.store';
     
-    if (!RESEND_API_KEY) {
-      throw new Error('RESEND_API_KEY is not configured');
+    if (!SMTP_PASS) {
+      throw new Error('SMTP_PASS is not configured');
     }
 
     let subject = '';
@@ -144,32 +149,33 @@ serve(async (req) => {
         throw new Error('Invalid email type');
     }
 
-    // Send email using Resend API
-    const emailResponse = await fetch('https://api.resend.com/emails', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${RESEND_API_KEY}`,
-        'Content-Type': 'application/json',
+    // Initialize SMTP client
+    const client = new SMTPClient({
+      connection: {
+        hostname: SMTP_HOST,
+        port: SMTP_PORT,
+        tls: true,
+        auth: {
+          username: SMTP_USER,
+          password: SMTP_PASS,
+        },
       },
-      body: JSON.stringify({
-        from: 'promohive@globalpromonetwork.store',
-        to: [to],
-        subject: subject,
-        html: htmlContent,
-      }),
     });
 
-    if (!emailResponse?.ok) {
-      const error = await emailResponse?.text();
-      throw new Error(`Email sending failed: ${error}`);
-    }
+    // Send email using SMTP
+    await client.send({
+      from: SMTP_FROM,
+      to: to,
+      subject: subject,
+      html: htmlContent,
+    });
 
-    const result = await emailResponse?.json();
+    await client.close();
 
     return new Response(JSON.stringify({
       success: true,
-      message: 'Email sent successfully',
-      emailId: result.id
+      message: 'Email sent successfully via SMTP',
+      provider: 'Hostinger SMTP'
     }), {
       headers: {
         "Content-Type": "application/json",
