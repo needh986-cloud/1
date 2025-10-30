@@ -2,6 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { Helmet } from 'react-helmet';
 import Icon from '../../components/AppIcon';
 import Button from '../../components/ui/Button';
+import { adminService } from '../../services/adminService';
 import { Checkbox } from '../../components/ui/Checkbox';
 import Breadcrumb from '../../components/ui/Breadcrumb';
 import WithdrawalCard from './components/WithdrawalCard';
@@ -157,12 +158,43 @@ const WithdrawalsProcessing = () => {
   };
 
   useEffect(() => {
-    // Simulate API call
     const loadWithdrawals = async () => {
-      setIsLoading(true);
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      setWithdrawals(mockWithdrawals);
-      setIsLoading(false);
+      try {
+        setIsLoading(true);
+        const data = await adminService.getPendingWithdrawals();
+        // adminService returns array of transactions joined with user_profiles
+        // Normalize into the shape used by this page
+        const normalized = (data || []).map((t) => ({
+          id: t.id,
+          user: {
+            id: t.user_profiles?.id || t.user_id,
+            name: t.user_profiles?.full_name || t.user_profiles?.email || 'User',
+            email: t.user_profiles?.email || '',
+            status: t.user_profiles?.status || 'approved',
+            totalWithdrawals: t.user_profiles?.total_withdrawals || 0,
+            successRate: t.user_profiles?.success_rate || 100
+          },
+          amount: parseFloat(t.amount) || 0,
+          usdtAmount: parseFloat(t.amount) || 0,
+          walletAddress: t.withdrawal_address || t.meta?.withdrawal_address || '',
+          network: t.network || (t.meta && t.meta.network) || 'TRC20',
+          status: (t.status || 'pending').toUpperCase(),
+          conversionRate: t.meta?.conversionRate || 1,
+          processingFee: t.meta?.fee || 0,
+          riskScore: t.meta?.risk || 'LOW',
+          createdAt: t.created_at || t.createdAt,
+          transactionHash: t.tx_hash || t.transaction_hash || null,
+          processedBy: t.processed_by || null,
+          processedAt: t.processed_at || null,
+          rejectionReason: t.admin_notes || t.rejection_reason || null
+        }));
+
+        setWithdrawals(normalized);
+      } catch (err) {
+        console.error('Failed to load withdrawals', err);
+      } finally {
+        setIsLoading(false);
+      }
     };
 
     loadWithdrawals();
@@ -240,118 +272,65 @@ const WithdrawalsProcessing = () => {
   };
 
   const handleApprove = async (withdrawalId, transactionHash) => {
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    
-    setWithdrawals(prev => prev?.map(w => 
-      w?.id === withdrawalId 
-        ? { 
-            ...w, 
-            status: 'APPROVED', 
-            transactionHash,
-            processedBy: 'Current Admin',
-            processedAt: new Date()?.toISOString()
-          }
-        : w
-    ));
-    
-    // Remove from selection
-    setSelectedWithdrawals(prev => prev?.filter(w => w?.id !== withdrawalId));
+    try {
+      // Call admin service to process withdrawal
+      const result = await adminService.processWithdrawal(withdrawalId, 'approve', transactionHash || '');
+      // Update local UI
+      setWithdrawals(prev => prev?.map(w => w?.id === withdrawalId ? { ...w, status: 'APPROVED', transactionHash: result?.transaction_hash || transactionHash, processedBy: result?.processed_by || 'Admin', processedAt: result?.processed_at || new Date()?.toISOString() } : w));
+      setSelectedWithdrawals(prev => prev?.filter(w => w?.id !== withdrawalId));
+    } catch (err) {
+      console.error('Approve withdrawal failed', err);
+    }
   };
 
   const handleReject = async (withdrawalId, rejectionReason) => {
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    
-    setWithdrawals(prev => prev?.map(w => 
-      w?.id === withdrawalId 
-        ? { 
-            ...w, 
-            status: 'REJECTED', 
-            rejectionReason,
-            processedBy: 'Current Admin',
-            processedAt: new Date()?.toISOString()
-          }
-        : w
-    ));
-    
-    // Remove from selection
-    setSelectedWithdrawals(prev => prev?.filter(w => w?.id !== withdrawalId));
+    try {
+      const result = await adminService.processWithdrawal(withdrawalId, 'reject', rejectionReason || '');
+      setWithdrawals(prev => prev?.map(w => w?.id === withdrawalId ? { ...w, status: 'REJECTED', rejectionReason, processedBy: result?.processed_by || 'Admin', processedAt: result?.processed_at || new Date()?.toISOString() } : w));
+      setSelectedWithdrawals(prev => prev?.filter(w => w?.id !== withdrawalId));
+    } catch (err) {
+      console.error('Reject withdrawal failed', err);
+    }
   };
 
   const handleHold = async (withdrawalId) => {
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    
-    setWithdrawals(prev => prev?.map(w => 
-      w?.id === withdrawalId 
-        ? { 
-            ...w, 
-            status: 'PROCESSING',
-            processedBy: 'Current Admin',
-            processedAt: new Date()?.toISOString()
-          }
-        : w
-    ));
-    
-    // Remove from selection
-    setSelectedWithdrawals(prev => prev?.filter(w => w?.id !== withdrawalId));
+    try {
+      const result = await adminService.processWithdrawal(withdrawalId, 'hold', 'Placed on hold by admin');
+      setWithdrawals(prev => prev?.map(w => w?.id === withdrawalId ? { ...w, status: 'PROCESSING', processedBy: result?.processed_by || 'Admin', processedAt: result?.processed_at || new Date()?.toISOString() } : w));
+      setSelectedWithdrawals(prev => prev?.filter(w => w?.id !== withdrawalId));
+    } catch (err) {
+      console.error('Hold withdrawal failed', err);
+    }
   };
 
   const handleBulkApprove = async (withdrawalIds, transactionHash) => {
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 2000));
-    
-    setWithdrawals(prev => prev?.map(w => 
-      withdrawalIds?.includes(w?.id)
-        ? { 
-            ...w, 
-            status: 'APPROVED', 
-            transactionHash: `${transactionHash}_${w?.id}`,
-            processedBy: 'Current Admin',
-            processedAt: new Date()?.toISOString()
-          }
-        : w
-    ));
-    
-    setSelectedWithdrawals([]);
+    try {
+      await Promise.all(withdrawalIds.map(id => adminService.processWithdrawal(id, 'approve', transactionHash || '')));
+      setWithdrawals(prev => prev?.map(w => withdrawalIds?.includes(w?.id) ? { ...w, status: 'APPROVED', transactionHash: `${transactionHash || 'tx'}_${w?.id}`, processedBy: 'Admin', processedAt: new Date()?.toISOString() } : w));
+      setSelectedWithdrawals([]);
+    } catch (err) {
+      console.error('Bulk approve failed', err);
+    }
   };
 
   const handleBulkReject = async (withdrawalIds, rejectionReason) => {
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 2000));
-    
-    setWithdrawals(prev => prev?.map(w => 
-      withdrawalIds?.includes(w?.id)
-        ? { 
-            ...w, 
-            status: 'REJECTED', 
-            rejectionReason,
-            processedBy: 'Current Admin',
-            processedAt: new Date()?.toISOString()
-          }
-        : w
-    ));
-    
-    setSelectedWithdrawals([]);
+    try {
+      await Promise.all(withdrawalIds.map(id => adminService.processWithdrawal(id, 'reject', rejectionReason || '')));
+      setWithdrawals(prev => prev?.map(w => withdrawalIds?.includes(w?.id) ? { ...w, status: 'REJECTED', rejectionReason, processedBy: 'Admin', processedAt: new Date()?.toISOString() } : w));
+      setSelectedWithdrawals([]);
+    } catch (err) {
+      console.error('Bulk reject failed', err);
+    }
   };
 
   const handleBulkHold = async (withdrawalIds) => {
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1500));
-    
-    setWithdrawals(prev => prev?.map(w => 
-      withdrawalIds?.includes(w?.id)
-        ? { 
-            ...w, 
-            status: 'PROCESSING',
-            processedBy: 'Current Admin',
-            processedAt: new Date()?.toISOString()
-          }
-        : w
-    ));
-    
-    setSelectedWithdrawals([]);
+    try {
+      await Promise.all(withdrawalIds.map(id => adminService.processWithdrawal(id, 'hold', 'Placed on hold by admin')));
+      setWithdrawals(prev => prev?.map(w => withdrawalIds?.includes(w?.id) ? { ...w, status: 'PROCESSING', processedBy: 'Admin', processedAt: new Date()?.toISOString() } : w));
+      setSelectedWithdrawals([]);
+    } catch (err) {
+      console.error('Bulk hold failed', err);
+    }
   };
 
   const handleClearFilters = () => {

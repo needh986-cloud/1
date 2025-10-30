@@ -44,9 +44,17 @@ export const taskService = {
   // Get tasks with user-specific rewards (for AdGem level-based display)
   async getTasksForUser(userId, filters = {}) {
     try {
-      // Get user level first
-      const { data: userProfile } = await supabase?.from('user_profiles')?.select('level')?.eq('id', userId)?.single();
-      const userLevel = userProfile?.level || 0;
+      // Get user level first (defensive: return level 0 for unauthenticated users)
+      let userLevel = 0;
+      if (userId) {
+        try {
+          const { data: userProfile } = await supabase?.from('user_profiles')?.select('level')?.eq('id', userId)?.single();
+          userLevel = userProfile?.level || 0;
+        } catch (err) {
+          console.warn('Failed to load user profile for level calculation, defaulting to level 0', err);
+          userLevel = 0;
+        }
+      }
 
       let query = supabase?.from('tasks')?.select(`
           *,

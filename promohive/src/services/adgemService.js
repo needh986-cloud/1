@@ -14,16 +14,23 @@ export const adgemService = {
         throw error;
       }
 
-      // Get user level to calculate display rewards
-      const { data: userProfile } = await supabase?.from('user_profiles')?.select('level')?.eq('id', userId)?.single();
-      
-      const userLevel = userProfile?.level || 0;
+      // Get user level to calculate display rewards (defensive - allow null userId)
+      let userLevel = 0;
+      if (userId) {
+        try {
+          const { data: userProfile } = await supabase?.from('user_profiles')?.select('level')?.eq('id', userId)?.single();
+          userLevel = userProfile?.level || 0;
+        } catch (err) {
+          console.warn('Failed to load user profile for AdGem offers, defaulting to level 0', err);
+          userLevel = 0;
+        }
+      }
 
       // Calculate display rewards based on user level (hide real values)
       const offersWithUserRewards = offers?.map(offer => ({
         ...offer,
         real_value: undefined, // Hide real value from user
-        display_reward: this.calculateDisplayReward(offer?.real_value, userLevel),
+        display_reward: this.calculateDisplayReward(offer?.real_value || 0, userLevel),
         user_level: userLevel
       }));
 

@@ -1,5 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { Helmet } from 'react-helmet';
+import { adminService } from '../../services/adminService';
+import { toast } from 'react-hot-toast';
 import Icon from '../../components/AppIcon';
 import Button from '../../components/ui/Button';
 import Breadcrumb from '../../components/ui/Breadcrumb';
@@ -165,13 +167,19 @@ const ProofsReview = () => {
   };
 
   useEffect(() => {
-    // Simulate loading
-    const timer = setTimeout(() => {
-      setProofs(mockProofs);
-      setIsLoading(false);
-    }, 1000);
+    const loadProofs = async () => {
+      try {
+        const data = await adminService.getPendingProofs();
+        setProofs(data);
+      } catch (error) {
+        console.error('Error loading proofs:', error);
+        toast.error('Failed to load proofs. Please try again.');
+      } finally {
+        setIsLoading(false);
+      }
+    };
 
-    return () => clearTimeout(timer);
+    loadProofs();
   }, []);
 
   // Filter and sort proofs
@@ -240,59 +248,61 @@ const ProofsReview = () => {
   };
 
   const handleApprove = async (proofId) => {
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-
-    setProofs((prev) => prev?.map((proof) =>
-    proof?.id === proofId ?
-    { ...proof, status: 'APPROVED', reviewedAt: new Date()?.toISOString(), reviewedBy: 'ADMIN_001' } :
-    proof
-    ));
+    try {
+      const updatedProof = await adminService.reviewProof(proofId, 'approve');
+      setProofs((prev) => prev?.map((proof) =>
+        proof?.id === proofId ? updatedProof : proof
+      ));
+    } catch (error) {
+      console.error('Error approving proof:', error);
+      toast.error('Failed to approve proof. Please try again.');
+    }
   };
 
   const handleReject = async (proofId, reason) => {
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-
-    setProofs((prev) => prev?.map((proof) =>
-    proof?.id === proofId ?
-    {
-      ...proof,
-      status: 'REJECTED',
-      rejectionReason: reason,
-      reviewedAt: new Date()?.toISOString(),
-      reviewedBy: 'ADMIN_001'
-    } :
-    proof
-    ));
+    try {
+      const updatedProof = await adminService.reviewProof(proofId, 'reject', reason);
+      setProofs((prev) => prev?.map((proof) =>
+        proof?.id === proofId ? updatedProof : proof
+      ));
+    } catch (error) {
+      console.error('Error rejecting proof:', error);
+      // TODO: Add error toast
+    }
   };
 
   const handleBulkApprove = async (proofIds) => {
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 2000));
-
-    setProofs((prev) => prev?.map((proof) =>
-    proofIds?.includes(proof?.id) ?
-    { ...proof, status: 'APPROVED', reviewedAt: new Date()?.toISOString(), reviewedBy: 'ADMIN_001' } :
-    proof
-    ));
+    try {
+      await Promise.all(
+        proofIds.map(proofId => adminService.reviewProof(proofId, 'approve'))
+      );
+      
+      // Refresh proofs list
+      const updatedProofs = await adminService.getPendingProofs();
+      setProofs(updatedProofs);
+      setSelectedProofs([]);
+    } catch (error) {
+      console.error('Error in bulk approve:', error);
+      // TODO: Add error toast
+    }
   };
 
   const handleBulkReject = async (proofIds) => {
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 2000));
-
-    setProofs((prev) => prev?.map((proof) =>
-    proofIds?.includes(proof?.id) ?
-    {
-      ...proof,
-      status: 'REJECTED',
-      rejectionReason: 'Bulk rejection - requires individual review',
-      reviewedAt: new Date()?.toISOString(),
-      reviewedBy: 'ADMIN_001'
-    } :
-    proof
-    ));
+    try {
+      await Promise.all(
+        proofIds.map(proofId => 
+          adminService.reviewProof(proofId, 'reject', 'Bulk rejection - requires individual review')
+        )
+      );
+      
+      // Refresh proofs list
+      const updatedProofs = await adminService.getPendingProofs();
+      setProofs(updatedProofs);
+      setSelectedProofs([]);
+    } catch (error) {
+      console.error('Error in bulk reject:', error);
+      // TODO: Add error toast
+    }
   };
 
   const handleClearFilters = () => {

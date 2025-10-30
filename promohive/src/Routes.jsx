@@ -12,6 +12,7 @@ const ProofsReview = lazy(() => import('./pages/proofs-review'));
 const LoginPage = lazy(() => import('./pages/login'));
 const UserDashboard = lazy(() => import('./pages/user-dashboard'));
 const WithdrawalsProcessing = lazy(() => import('./pages/withdrawals-processing'));
+const AdminWallets = lazy(() => import('./pages/admin-wallets'));
 const DailySpinWheel = lazy(() => import('./pages/daily-spin-wheel'));
 const TaskDetails = lazy(() => import('./pages/task-details'));
 const ReferralsManagement = lazy(() => import('./pages/referrals-management'));
@@ -42,6 +43,7 @@ const Routes = () => {
       <Suspense fallback={<LoadingFallback />}>
         <RouterRoutes>
           {/* Public routes */}
+          <Route path="/admin-wallets" element={<ProtectedRoute requireAdmin={true}><AdminWallets /></ProtectedRoute>} />
           <Route path="/" element={<LoginPage />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<Register />} />
