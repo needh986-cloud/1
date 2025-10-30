@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Helmet } from 'react-helmet';
+import { useAuth } from '../../contexts/AuthContext';
+import { adminService } from '../../services/adminService';
 import Icon from '../../components/AppIcon';
 import Button from '../../components/ui/Button';
 import MetricCard from './components/MetricCard';
@@ -11,7 +13,10 @@ import AdminShortcuts from './components/AdminShortcuts';
 
 const AdminDashboard = () => {
   const [currentTime, setCurrentTime] = useState(new Date());
-  const [adminUser, setAdminUser] = useState(null);
+  const { profile, user } = useAuth();
+  const [stats, setStats] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
     // Update time every minute
@@ -19,24 +24,36 @@ const AdminDashboard = () => {
       setCurrentTime(new Date());
     }, 60000);
 
-    // Simulate admin user data
-    const userData = {
-      name: "Admin User",
-      email: "admin@promohive.com",
-      role: "SUPER_ADMIN",
-      lastLogin: new Date(Date.now() - 3600000),
-      permissions: ["USER_MANAGEMENT", "TASK_MANAGEMENT", "FINANCIAL_OVERSIGHT", "SYSTEM_CONFIG"]
-    };
-    setAdminUser(userData);
-
     return () => clearInterval(timer);
   }, []);
 
-  // Mock platform metrics
-  const platformMetrics = [
+  useEffect(() => {
+    fetchDashboardData();
+  }, []);
+
+  const fetchDashboardData = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const result = await adminService.getDashboardStats();
+      
+      if (result.success) {
+        setStats(result.stats);
+      } else {
+        setError(result.error || 'Failed to load dashboard data');
+      }
+    } catch (err) {
+      setError(err.message || 'An error occurred while loading dashboard data');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Platform metrics from real data
+  const platformMetrics = stats ? [
     {
       title: "Total Users",
-      value: 12847,
+      value: stats.totalUsers || 0,
       change: "+12.5%",
       changeType: "positive",
       icon: "Users",
@@ -46,9 +63,9 @@ const AdminDashboard = () => {
     },
     {
       title: "Pending Approvals",
-      value: 23,
-      change: "+5",
-      changeType: "warning",
+      value: stats.pendingApprovals || 0,
+      change: stats.pendingApprovals > 0 ? `+${stats.pendingApprovals}` : "0",
+      changeType: stats.pendingApprovals > 0 ? "warning" : "positive",
       icon: "UserCheck",
       iconColor: "text-warning",
       description: "Awaiting admin review",
@@ -56,7 +73,7 @@ const AdminDashboard = () => {
     },
     {
       title: "Active Tasks",
-      value: 89,
+      value: stats.activeTasks || 0,
       change: "+8.2%",
       changeType: "positive",
       icon: "CheckSquare",
@@ -66,19 +83,19 @@ const AdminDashboard = () => {
     },
     {
       title: "Platform Revenue",
-      value: "$45,230",
+      value: `$${(stats.totalRevenue || 0).toFixed(2)}`,
       change: "+15.3%",
       changeType: "positive",
       icon: "DollarSign",
       iconColor: "text-success",
-      description: "This month\'s earnings",
+      description: "Total earnings",
       trend: true
     },
     {
       title: "Withdrawal Requests",
-      value: 12,
-      change: "-3",
-      changeType: "positive",
+      value: stats.pendingWithdrawals || 0,
+      change: stats.pendingWithdrawals > 0 ? `${stats.pendingWithdrawals}` : "0",
+      changeType: stats.pendingWithdrawals === 0 ? "positive" : "warning",
       icon: "CreditCard",
       iconColor: "text-secondary",
       description: "Pending USDT withdrawals",
@@ -86,15 +103,15 @@ const AdminDashboard = () => {
     },
     {
       title: "Proof Reviews",
-      value: 47,
-      change: "+18",
-      changeType: "warning",
+      value: 0,
+      change: "0",
+      changeType: "positive",
       icon: "Eye",
       iconColor: "text-warning",
       description: "Awaiting verification",
       trend: true
     }
-  ];
+  ] : [];
 
   const formatDateTime = (date) => {
     return date?.toLocaleDateString('en-US', {
@@ -106,6 +123,37 @@ const AdminDashboard = () => {
       minute: '2-digit'
     });
   };
+
+  // Show loading state
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+          <p className="text-text-secondary">جاري تحميل لوحة التحكم...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Show error state
+  if (error) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center p-4">
+        <div className="glass rounded-2xl p-8 max-w-md w-full text-center">
+          <Icon name="AlertCircle" size={48} className="text-destructive mx-auto mb-4" />
+          <h2 className="text-xl font-bold text-foreground mb-2">خطأ في تحميل البيانات</h2>
+          <p className="text-text-secondary mb-6">{error}</p>
+          <button
+            onClick={fetchDashboardData}
+            className="px-6 py-2 bg-primary hover:bg-primary/90 text-white rounded-lg transition-colors"
+          >
+            إعادة المحاولة
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <>
@@ -125,7 +173,7 @@ const AdminDashboard = () => {
                 <div>
                   <h1 className="text-2xl font-bold text-foreground">Admin Dashboard</h1>
                   <p className="text-text-secondary">
-                    Welcome back, {adminUser?.name || 'Administrator'}
+                    Welcome back, {profile?.full_name || user?.email || 'Administrator'}
                   </p>
                 </div>
               </div>
@@ -138,11 +186,7 @@ const AdminDashboard = () => {
               <div className="flex items-center space-x-2 px-3 py-2 rounded-lg glass">
                 <Icon name="Clock" size={16} className="text-success" />
                 <span className="text-sm text-success font-medium">
-                  Last login: {adminUser?.lastLogin ? 
-                    new Date(adminUser.lastLogin)?.toLocaleTimeString('en-US', { 
-                      hour: '2-digit', 
-                      minute: '2-digit' 
-                    }) : 'N/A'}
+                  Role: {profile?.role || 'admin'}
                 </span>
               </div>
               
@@ -193,10 +237,10 @@ const AdminDashboard = () => {
             <AdminShortcuts 
               onActionClick={(action) => console.log('Admin action:', action)}
               stats={{
-                totalUsers: 12847,
-                pendingApprovals: 23,
-                activeTasks: 89,
-                withdrawalRequests: 12
+                totalUsers: stats?.totalUsers || 0,
+                pendingApprovals: stats?.pendingApprovals || 0,
+                activeTasks: stats?.activeTasks || 0,
+                withdrawalRequests: stats?.pendingWithdrawals || 0
               }}
             />
           </section>
