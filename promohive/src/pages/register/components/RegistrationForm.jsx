@@ -136,25 +136,40 @@ const RegistrationForm = () => {
     });
   };
 
-  // Success Step
-  if (currentStep === 'success') {
+  // Pending Approval Step
+  if (currentStep === 'pending') {
     return (
       <div className="text-center py-8">
         <div className="mb-4">
-          <CheckCircle className="h-16 w-16 text-green-500 mx-auto" />
+          <Clock className="h-16 w-16 text-blue-500 mx-auto animate-pulse" />
         </div>
         <h3 className="text-xl font-semibold text-text-primary mb-2">
-          Your email is verified!
+          Registration Successful!
         </h3>
         <p className="text-text-secondary mb-4">
-          Your email has been verified successfully.
+          Your account has been created successfully.
           <br />
-          Your account will be reviewed by the admin before the welcome bonus is activated.
+          <strong className="text-text-primary">{registrationData?.email}</strong>
         </p>
         <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
-          <p className="text-blue-800 text-sm">
-            <strong>Note:</strong> You will receive the $5 welcome bonus after your account is approved.
+          <p className="text-blue-800 text-sm mb-2">
+            <strong>⏳ Awaiting Admin Approval</strong>
           </p>
+          <p className="text-blue-700 text-sm">
+            Your account is currently under review by our admin team.
+            You will receive a welcome email with your $5 bonus once approved.
+          </p>
+        </div>
+        <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-6">
+          <p className="text-green-800 text-sm">
+            <strong>📧 What happens next:</strong>
+          </p>
+          <ul className="text-green-700 text-sm mt-2 space-y-1 text-left list-disc list-inside">
+            <li>Admin reviews your account</li>
+            <li>You receive a welcome email when approved</li>
+            <li>$5 welcome bonus is added to your account</li>
+            <li>You can then sign in and start earning!</li>
+          </ul>
         </div>
         <button
           onClick={navigateToLogin}
@@ -165,7 +180,6 @@ const RegistrationForm = () => {
       </div>
     );
   }
-
   // Verification Step
   if (currentStep === 'verify') {
     return (
