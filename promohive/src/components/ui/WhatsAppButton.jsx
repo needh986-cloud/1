@@ -13,10 +13,15 @@ const WhatsAppButton = () => {
         const settings = await adminService?.getSettings();
         const phoneSettings = settings?.find(s => s?.key === 'customer_service_phone');
         if (phoneSettings?.value) {
-          setPhoneNumber(JSON.parse(phoneSettings?.value));
+          // Fix: Check if value is already a string or needs parsing
+          const phoneValue = typeof phoneSettings.value === 'string' && !phoneSettings.value.startsWith('{') 
+            ? phoneSettings.value 
+            : JSON.parse(phoneSettings.value);
+          setPhoneNumber(phoneValue);
         }
       } catch (error) {
         console.error('Failed to fetch phone number:', error);
+        // Keep default phone number if fetch fails
       }
     };
 

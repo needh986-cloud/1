@@ -233,5 +233,28 @@ export const taskService = {
     } catch (error) {
       return { hasSubmitted: false, error };
     }
+  },
+
+  // Get user profile
+  async getUserProfile(userId) {
+    try {
+      const { data, error } = await supabase
+        .from('user_profiles')
+        .select('*')
+        .eq('id', userId)
+        .single();
+
+      if (error) {
+        if (error?.message?.includes('Failed to fetch') || 
+            error?.message?.includes('NetworkError')) {
+          throw new Error('Cannot connect to database. Your Supabase project may be paused or deleted. Please visit your Supabase dashboard to check project status.');
+        }
+        throw error;
+      }
+
+      return { profile: data, error: null };
+    } catch (error) {
+      return { profile: null, error };
+    }
   }
 };

@@ -40,6 +40,12 @@ const TasksList = () => {
   }, []);
 
   const loadTasks = async () => {
+    if (!user?.id) {
+      console.error('User not authenticated');
+      setLoading(false);
+      return;
+    }
+    
     setLoading(true);
     try {
       const filters = {
