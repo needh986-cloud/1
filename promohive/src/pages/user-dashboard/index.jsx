@@ -1,13 +1,17 @@
 import React, { useState, useEffect } from 'react';
 import { Helmet } from 'react-helmet';
+import { Link } from 'react-router-dom';
+import Icon from '../../components/AppIcon';
 import BalanceCard from './components/BalanceCard';
 import TaskProgressCard from './components/TaskProgressCard';
 import RecentTransactions from './components/RecentTransactions';
 import NotificationPanel from './components/NotificationPanel';
 import QuickActions from './components/QuickActions';
 import DailySpinWidget from './components/DailySpinWidget';
+import { useAuth } from '../../contexts/AuthContext';
 
 const UserDashboard = () => {
+  const { isAdmin } = useAuth();
   const [loading, setLoading] = useState(true);
   const [dashboardData, setDashboardData] = useState({
     balances: {

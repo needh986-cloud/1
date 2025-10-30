@@ -2,23 +2,12 @@ import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import Icon from '../AppIcon';
 import Button from './Button';
+import { useAuth } from '../../contexts/AuthContext';
 
 const Header = ({ onMenuToggle, isMenuOpen = false }) => {
-  const [user, setUser] = useState(null);
+  const { user, profile, isAdmin } = useAuth();
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const location = useLocation();
-
-  useEffect(() => {
-    // Simulate user data - in real app, get from auth context
-    const userData = {
-      name: 'John Doe',
-      email: 'john@promohive.com',
-      avatar: '/assets/images/avatar.jpg',
-      role: 'user', // or 'admin'
-      balance: 1250.75
-    };
-    setUser(userData);
-  }, []);
 
   const handleLogout = () => {
     // Handle logout logic
@@ -59,6 +48,17 @@ const Header = ({ onMenuToggle, isMenuOpen = false }) => {
 
         {/* Center Section - Primary Navigation (Desktop) */}
         <nav className="hidden lg:flex items-center space-x-1">
+          {/* Admin Dashboard Button - Shows only for admins */}
+          {isAdmin() && (
+            <Link
+              to="/admin-dashboard"
+              className="px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 bg-gradient-primary text-white hover:opacity-90 flex items-center gap-2"
+            >
+              <Icon name="Shield" size={16} />
+              Admin Dashboard
+            </Link>
+          )}
+          
           <Link
             to="/user-dashboard"
             className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
