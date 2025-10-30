@@ -7,6 +7,7 @@ import NotFound from "pages/NotFound";
 
 // Lazy load pages for better performance
 const AdminDashboard = lazy(() => import('./pages/admin-dashboard'));
+const AdminSettings = lazy(() => import('./pages/admin-settings'));
 const ProofsReview = lazy(() => import('./pages/proofs-review'));
 const LoginPage = lazy(() => import('./pages/login'));
 const UserDashboard = lazy(() => import('./pages/user-dashboard'));
@@ -21,6 +22,7 @@ const WithdrawalRequest = lazy(() => import('./pages/withdrawal-request'));
 const ProfileSettings = lazy(() => import('./pages/profile-settings'));
 const Register = lazy(() => import('./pages/register'));
 const TasksList = lazy(() => import('./pages/tasks-list'));
+const LevelUpgrade = lazy(() => import('./pages/level-upgrade'));
 
 // Loading component
 const LoadingFallback = () => (
@@ -46,6 +48,7 @@ const Routes = () => {
           
           {/* Admin routes - require admin role */}
           <Route path="/admin-dashboard" element={<ProtectedRoute requireAdmin={true}><AdminDashboard /></ProtectedRoute>} />
+          <Route path="/admin-settings" element={<ProtectedRoute requireAdmin={true}><AdminSettings /></ProtectedRoute>} />
           <Route path="/proofs-review" element={<ProtectedRoute requireAdmin={true}><ProofsReview /></ProtectedRoute>} />
           <Route path="/withdrawals-processing" element={<ProtectedRoute requireAdmin={true}><WithdrawalsProcessing /></ProtectedRoute>} />
           <Route path="/users-management" element={<ProtectedRoute requireAdmin={true}><UsersManagement /></ProtectedRoute>} />
@@ -53,6 +56,7 @@ const Routes = () => {
           {/* User routes - require authentication only */}
           <Route path="/user-dashboard" element={<ProtectedRoute><UserDashboard /></ProtectedRoute>} />
           <Route path="/daily-spin-wheel" element={<ProtectedRoute><DailySpinWheel /></ProtectedRoute>} />
+          <Route path="/level-upgrade" element={<ProtectedRoute><LevelUpgrade /></ProtectedRoute>} />
           <Route path="/task-details" element={<ProtectedRoute><TaskDetails /></ProtectedRoute>} />
           <Route path="/tasks-list" element={<ProtectedRoute><TasksList /></ProtectedRoute>} />
           <Route path="/referrals-management" element={<ProtectedRoute><ReferralsManagement /></ProtectedRoute>} />
