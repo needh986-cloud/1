@@ -169,6 +169,19 @@ const UserDashboard = () => {
         <title>Dashboard - PromoHive</title>
         <meta name="description" content="View your earnings, task progress, and account activity on PromoHive dashboard" />
       </Helmet>
+      
+      {/* Admin Quick Access Button - Floating */}
+      {isAdmin() && (
+        <Link
+          to="/admin-dashboard"
+          className="fixed bottom-24 right-6 z-40 flex items-center gap-2 px-6 py-3 bg-gradient-primary text-white rounded-full shadow-2xl hover:scale-105 transition-transform duration-200 animate-pulse"
+          title="Go to Admin Dashboard"
+        >
+          <Icon name="Shield" size={20} />
+          <span className="font-semibold">Admin Panel</span>
+        </Link>
+      )}
+      
       <div className="min-h-screen bg-background">
         <div className="max-w-7xl mx-auto p-6 space-y-8">
           {/* Welcome Section */}
