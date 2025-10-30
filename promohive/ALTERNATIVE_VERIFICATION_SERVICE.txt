@@ -1,3 +1,7 @@
+// ✅ ALTERNATIVE verificationService.js
+// This version bypasses RPC and generates code in frontend
+// Replace /workspace/promohive/src/services/verificationService.js with this:
+
 import { supabase } from '../lib/supabase';
 
 // Generate 5-digit code in frontend
@@ -38,12 +42,8 @@ export const verificationService = {
         throw insertError;
       }
 
-      // TEMPORARY: Skip email sending for testing
-      // In production, uncomment the email sending code below
-      
-      // Send email via Edge Function (DISABLED FOR TESTING)
-      /* 
-      const { data: emailData, error: emailError } = await supabase?.functions?.invoke('send-verification-email', {
+      // Send email via Edge Function
+      const { data: emailData, error: emailError } = await supabase.functions.invoke('send-verification-email', {
         body: {
           email,
           verificationCode: verificationCode,
@@ -54,18 +54,11 @@ export const verificationService = {
       if (emailError) {
         throw emailError;
       }
-      */
 
-      // FOR TESTING ONLY: Return the code in the response
-      console.log('🔑 VERIFICATION CODE:', verificationCode);
-      
       return { 
         success: true, 
-        message: 'Verification code created: ' + verificationCode,
-        code: verificationCode, // TESTING ONLY - Remove in production!
-        data: { 
-          note: 'Email sending is disabled. Use the code shown above.' 
-        }
+        message: 'Verification code has been sent to your email',
+        data: emailData 
       };
     } catch (error) {
       return { 
@@ -148,7 +141,11 @@ export const verificationService = {
   // Get verification status
   async getVerificationStatus(userId) {
     try {
-      const { data, error } = await supabase?.from('user_profiles')?.select('email_verified, approval_status, status')?.eq('id', userId)?.single();
+      const { data, error } = await supabase
+        .from('user_profiles')
+        .select('email_verified, approval_status, status')
+        .eq('id', userId)
+        .single();
 
       if (error) {
         throw error;
@@ -170,12 +167,20 @@ export const verificationService = {
     }
   },
 
-  // Get pending verification codes for user
+  // Get pending verification code for user
   async getPendingVerificationCode(userId) {
     try {
-      const { data, error } = await supabase?.from('email_verification_codes')?.select('*')?.eq('user_id', userId)?.eq('verified', false)?.gt('expires_at', new Date()?.toISOString())?.order('created_at', { ascending: false })?.limit(1)?.single();
+      const { data, error } = await supabase
+        .from('email_verification_codes')
+        .select('*')
+        .eq('user_id', userId)
+        .eq('verified', false)
+        .gt('expires_at', new Date().toISOString())
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .single();
 
-      if (error && error?.code !== 'PGRST116') { // PGRST116 is "no rows returned"
+      if (error && error.code !== 'PGRST116') {
         throw error;
       }
 
@@ -195,8 +200,14 @@ export const verificationService = {
   async resendVerificationCode(email, fullName, userId) {
     try {
       // Check if user can request new code (rate limiting)
-      const { data: recentCode } = await supabase?.from('email_verification_codes')?.select('created_at')?.eq('user_id', userId)?.gte('created_at', new Date(Date.now() - 60000)?.toISOString()) // Last minute
-      ?.order('created_at', { ascending: false })?.limit(1)?.single();
+      const { data: recentCode } = await supabase
+        .from('email_verification_codes')
+        .select('created_at')
+        .eq('user_id', userId)
+        .gte('created_at', new Date(Date.now() - 60000).toISOString())
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .single();
 
       if (recentCode) {
         return { 
