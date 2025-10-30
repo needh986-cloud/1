@@ -6,7 +6,7 @@
   command = "npm install && npm run build"
   
   # Output directory (relative to base)
-  publish = "dist"
+  publish = "build"
 
 [build.environment]
   NODE_VERSION = "18"
