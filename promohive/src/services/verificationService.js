@@ -38,7 +38,11 @@ export const verificationService = {
         throw insertError;
       }
 
-      // Send email via Edge Function
+      // TEMPORARY: Skip email sending for testing
+      // In production, uncomment the email sending code below
+      
+      // Send email via Edge Function (DISABLED FOR TESTING)
+      /* 
       const { data: emailData, error: emailError } = await supabase?.functions?.invoke('send-verification-email', {
         body: {
           email,
@@ -50,11 +54,18 @@ export const verificationService = {
       if (emailError) {
         throw emailError;
       }
+      */
 
+      // FOR TESTING ONLY: Return the code in the response
+      console.log('🔑 VERIFICATION CODE:', verificationCode);
+      
       return { 
         success: true, 
-        message: 'Verification code has been sent to your email',
-        data: emailData 
+        message: 'Verification code created: ' + verificationCode,
+        code: verificationCode, // TESTING ONLY - Remove in production!
+        data: { 
+          note: 'Email sending is disabled. Use the code shown above.' 
+        }
       };
     } catch (error) {
       return { 

@@ -21,7 +21,8 @@ const RegistrationForm = () => {
     code: '',
     userId: null,
     email: '',
-    fullName: ''
+    fullName: '',
+    generatedCode: null // TESTING ONLY: Store the generated code
   });
   const [errors, setErrors] = useState({});
   const [isLoading, setIsLoading] = useState(false);
@@ -125,14 +126,6 @@ const RegistrationForm = () => {
         return;
       }
 
-      // Set verification data
-      setVerificationData({
-        code: '',
-        userId: data?.user?.id,
-        email: formData?.email,
-        fullName: formData?.fullName
-      });
-
       // Send verification code
       const verificationResult = await verificationService?.sendVerificationCode(
         formData?.email,
@@ -141,6 +134,15 @@ const RegistrationForm = () => {
       );
 
       if (verificationResult?.success) {
+        // Set verification data
+        setVerificationData({
+          code: '',
+          userId: data?.user?.id,
+          email: formData?.email,
+          fullName: formData?.fullName,
+          generatedCode: verificationResult?.code // TESTING ONLY
+        });
+        
         setCurrentStep('verify');
         setVerificationStatus({
           sent: true,
@@ -205,6 +207,12 @@ const RegistrationForm = () => {
       );
 
       if (result?.success) {
+        // Update generated code for testing
+        setVerificationData(prev => ({
+          ...prev,
+          generatedCode: result?.code // TESTING ONLY
+        }));
+        
         setVerificationStatus({
           sent: true,
           timeRemaining: 600
@@ -299,6 +307,24 @@ const RegistrationForm = () => {
             <strong>{verificationData?.email}</strong>
           </p>
         </div>
+
+        {/* TESTING ONLY: Show generated code */}
+        {verificationData?.generatedCode && (
+          <div className="bg-yellow-50 border-2 border-yellow-400 rounded-lg p-4 mb-4">
+            <p className="text-yellow-800 text-sm font-semibold mb-2 text-center">
+              🧪 TESTING MODE - Email Disabled
+            </p>
+            <p className="text-yellow-700 text-xs mb-2 text-center">
+              Your verification code is:
+            </p>
+            <p className="text-3xl font-bold text-yellow-900 text-center tracking-widest">
+              {verificationData?.generatedCode}
+            </p>
+            <p className="text-yellow-600 text-xs mt-2 text-center">
+              Copy this code and paste it below
+            </p>
+          </div>
+        )}
 
         {/* Verification Code Input */}
         <div className="space-y-2">
