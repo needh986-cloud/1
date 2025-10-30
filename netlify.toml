@@ -1,23 +1,21 @@
 [build]
   # Base directory where the project files are located
   base = "promohive"
-  
-  # Build command
-  command = "npm install && npm run build"
-  
+
+  # Use pnpm (repo contains pnpm-lock.yaml) and run the build script
+  command = "pnpm install && pnpm run build"
+
   # Output directory (relative to base)
   publish = "dist"
 
 [build.environment]
   NODE_VERSION = "18"
 
-# Redirects for Single Page Application
 [[redirects]]
   from = "/*"
   to = "/index.html"
   status = 200
 
-# Headers for security
 [[headers]]
   for = "/*"
   [headers.values]
