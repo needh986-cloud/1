@@ -28,58 +28,58 @@ serve(async (req) => {
     // Generate email content based on type
     switch (type) {
       case 'welcome':
-        subject = 'مرحباً بك في PromoHive - حسابك مُفعّل الآن!';
+        subject = 'Welcome to PromoHive - Your Account is Now Active!';
         htmlContent = `
-          <div dir="rtl" style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; direction: rtl;">
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
             <div style="text-align: center; margin-bottom: 30px;">
               <h1 style="color: #2563eb; margin: 0;">PromoHive</h1>
-              <p style="color: #666; margin: 5px 0;">منصة المهام الترويجية الموثوقة</p>
+              <p style="color: #666; margin: 5px 0;">Trusted Promotional Task Platform</p>
             </div>
             
             <div style="background: #f8fafc; padding: 25px; border-radius: 10px; margin: 20px 0;">
-              <h2 style="color: #1e40af; margin-top: 0;">مرحباً ${data?.fullName || 'عزيزي المستخدم'}!</h2>
+              <h2 style="color: #1e40af; margin-top: 0;">Welcome ${data?.fullName || 'Dear User'}!</h2>
               
               <p style="line-height: 1.6; color: #374151;">
-                نحن سعداء لانضمامك إلى PromoHive! تم قبول حسابك وتفعيله بنجاح.
+                We are excited to have you join PromoHive! Your account has been approved and activated successfully.
               </p>
               
               <div style="background: #ecfdf5; border: 2px solid #10b981; padding: 15px; border-radius: 8px; margin: 20px 0;">
-                <h3 style="color: #065f46; margin: 0 0 10px 0;">🎉 مكافأة الترحيب</h3>
+                <h3 style="color: #065f46; margin: 0 0 10px 0;">🎉 Welcome Bonus</h3>
                 <p style="color: #065f46; margin: 0; font-weight: bold;">
-                  تهانينا! لقد حصلت على مكافأة ترحيبية قدرها 5$ في حسابك
+                  Congratulations! You have received a $5 welcome bonus in your account
                 </p>
               </div>
               
-              <h3 style="color: #1e40af;">معلومات مهمة:</h3>
+              <h3 style="color: #1e40af;">Important Information:</h3>
               <ul style="color: #374151; line-height: 1.8;">
-                <li>الحد الأدنى للسحب: 10$</li>
-                <li>الحد الأدنى للإيداع: 50$</li>
-                <li>عجلة الحظ اليومية متاحة (جائزة قصوى 0.30$ يومياً)</li>
-                <li>برنامج الإحالات المربح متاح</li>
+                <li>Minimum withdrawal: $10</li>
+                <li>Minimum deposit: $50</li>
+                <li>Daily spin wheel available (max prize $0.30 daily)</li>
+                <li>Profitable referral program available</li>
               </ul>
               
               <div style="text-align: center; margin: 30px 0;">
                 <a href="${data?.loginUrl || 'https://promohive.com/login'}" 
                    style="background: #2563eb; color: white; padding: 12px 30px; text-decoration: none; border-radius: 6px; font-weight: bold;">
-                  ابدأ الآن
+                  Get Started
                 </a>
               </div>
             </div>
             
             <div style="background: #fff7ed; padding: 20px; border-radius: 8px; border-left: 4px solid #f59e0b;">
-              <h3 style="color: #92400e; margin: 0 0 10px 0;">💬 تحتاج مساعدة؟</h3>
+              <h3 style="color: #92400e; margin: 0 0 10px 0;">💬 Need Help?</h3>
               <p style="color: #92400e; margin: 0; line-height: 1.6;">
-                تواصل معنا عبر واتساب: 
+                Contact us via WhatsApp: 
                 <a href="https://wa.me/17253348692" style="color: #92400e; font-weight: bold;">+1 725 334 8692</a><br>
-                أو عبر البريد الإلكتروني: 
+                Or via email: 
                 <a href="mailto:promohive@globalpromonetwork.store" style="color: #92400e;">promohive@globalpromonetwork.store</a>
               </p>
             </div>
             
             <div style="text-align: center; margin-top: 30px; padding-top: 20px; border-top: 1px solid #e5e7eb;">
               <p style="color: #6b7280; font-size: 12px; margin: 0;">
-                © 2022 PromoHive. جميع الحقوق محفوظة.<br>
-                هذا الإيميل تم إرساله تلقائياً، يرجى عدم الرد عليه.
+                © 2022 PromoHive. All rights reserved.<br>
+                This email was sent automatically, please do not reply.
               </p>
             </div>
           </div>
@@ -87,21 +87,21 @@ serve(async (req) => {
         break;
         
       case 'level_upgrade':
-        subject = `تهانينا! تم ترقية حسابك إلى ${data?.levelName}`;
+        subject = `Congratulations! Your account has been upgraded to ${data?.levelName}`;
         htmlContent = `
-          <div dir="rtl" style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
             <div style="text-align: center; margin-bottom: 30px;">
               <h1 style="color: #2563eb;">PromoHive</h1>
             </div>
             
             <div style="background: #f0fdf4; padding: 25px; border-radius: 10px; border: 2px solid #22c55e;">
-              <h2 style="color: #15803d;">🎉 تهانينا على الترقية!</h2>
+              <h2 style="color: #15803d;">🎉 Congratulations on Your Upgrade!</h2>
               <p style="color: #374151; line-height: 1.6;">
-                عزيزي ${data?.fullName}, تم ترقية حسابك بنجاح إلى <strong>${data?.levelName}</strong>
+                Dear ${data?.fullName}, your account has been successfully upgraded to <strong>${data?.levelName}</strong>
               </p>
               <p style="color: #374151;">
-                المبلغ المدفوع: <strong>${data?.paidAmount}$</strong><br>
-                تاريخ الترقية: <strong>${new Date()?.toLocaleDateString('ar-EG')}</strong>
+                Amount Paid: <strong>${data?.paidAmount}$</strong><br>
+                Upgrade Date: <strong>${new Date()?.toLocaleDateString('en-US')}</strong>
               </p>
             </div>
             
@@ -113,28 +113,28 @@ serve(async (req) => {
         break;
         
       case 'withdrawal_approved':
-        subject = 'تم الموافقة على طلب السحب';
+        subject = 'Withdrawal Request Approved';
         htmlContent = `
-          <div dir="rtl" style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
             <div style="background: #ecfdf5; padding: 25px; border-radius: 10px;">
-              <h2 style="color: #065f46;">✅ تم الموافقة على طلب السحب</h2>
-              <p>المبلغ: <strong>${data?.amount}$</strong></p>
-              <p>العنوان: <strong>${data?.address}</strong></p>
-              <p>سيتم التحويل خلال 24 ساعة</p>
+              <h2 style="color: #065f46;">✅ Withdrawal Request Approved</h2>
+              <p>Amount: <strong>${data?.amount}$</strong></p>
+              <p>Address: <strong>${data?.address}</strong></p>
+              <p>Transfer will be completed within 24 hours</p>
             </div>
           </div>
         `;
         break;
         
       case 'withdrawal_rejected':
-        subject = 'تم رفض طلب السحب';
+        subject = 'Withdrawal Request Rejected';
         htmlContent = `
-          <div dir="rtl" style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
             <div style="background: #fef2f2; padding: 25px; border-radius: 10px;">
-              <h2 style="color: #dc2626;">❌ تم رفض طلب السحب</h2>
-              <p>المبلغ: <strong>${data?.amount}$</strong></p>
-              <p>السبب: <strong>${data?.reason}</strong></p>
-              <p>يرجى التواصل مع الدعم للمزيد من المعلومات</p>
+              <h2 style="color: #dc2626;">❌ Withdrawal Request Rejected</h2>
+              <p>Amount: <strong>${data?.amount}$</strong></p>
+              <p>Reason: <strong>${data?.reason}</strong></p>
+              <p>Please contact support for more information</p>
             </div>
           </div>
         `;

@@ -38,21 +38,20 @@ serve(async (req) => {
       body: JSON.stringify({
         from: "onboarding@resend.dev",
         to: [email],
-        subject: "تأكيد بريدك الإلكتروني - PromoHive",
+        subject: "Email Verification - PromoHive",
         html: `
           <!DOCTYPE html>
-          <html dir="rtl" lang="ar">
+          <html lang="en">
           <head>
             <meta charset="UTF-8">
             <meta name="viewport" content="width=device-width, initial-scale=1.0">
-            <title>تأكيد البريد الإلكتروني</title>
+            <title>Email Verification</title>
             <style>
               body { 
                 font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
                 background-color: #f8f9fa; 
                 margin: 0; 
                 padding: 20px; 
-                direction: rtl;
               }
               .container { 
                 max-width: 600px; 
@@ -111,45 +110,45 @@ serve(async (req) => {
           <body>
             <div class="container">
               <div class="header">
-                <h1>🎉 مرحباً بك في PromoHive</h1>
-                <p>أهلاً وسهلاً ${fullName || 'عزيزي المستخدم'}</p>
+                <h1>🎉 Welcome to PromoHive</h1>
+                <p>Hello ${fullName || 'Dear User'}</p>
               </div>
               
               <div class="content">
-                <h2>تأكيد البريد الإلكتروني</h2>
-                <p>شكراً لك على التسجيل في منصة PromoHive. لإكمال عملية التسجيل، يرجى استخدام رمز التحقق التالي:</p>
+                <h2>Email Verification</h2>
+                <p>Thank you for registering on PromoHive platform. To complete the registration process, please use the following verification code:</p>
                 
                 <div class="code-container">
                   <div class="verification-code">${verificationCode}</div>
                 </div>
                 
-                <p><strong>صالح لمدة 10 دقائق فقط</strong></p>
+                <p><strong>Valid for 10 minutes only</strong></p>
                 
                 <div class="warning">
-                  <strong>⚠️ مهم:</strong> بعد تأكيد بريدك الإلكتروني، سيتم مراجعة حسابك من قبل الإدارة قبل تفعيل مكافأة الترحيب البالغة 5$.
+                  <strong>⚠️ Important:</strong> After confirming your email, your account will be reviewed by the admin before activating the $5 welcome bonus.
                 </div>
                 
-                <p>إذا لم تقم بإنشاء حساب على منصتنا، يرجى تجاهل هذا البريد.</p>
+                <p>If you did not create an account on our platform, please ignore this email.</p>
               </div>
               
               <div class="footer">
-                <p>© 2022 PromoHive - منصة المهام الترويجية الآمنة</p>
-                <p>هذا البريد تم إرساله تلقائياً، يرجى عدم الرد عليه</p>
+                <p>© 2022 PromoHive - Secure Promotional Task Platform</p>
+                <p>This email was sent automatically, please do not reply to it</p>
               </div>
             </div>
           </body>
           </html>
         `,
         text: `
-مرحباً ${fullName || 'عزيزي المستخدم'}،
+Hello ${fullName || 'Dear User'},
 
-شكراً لك على التسجيل في منصة PromoHive.
+Thank you for registering on PromoHive platform.
 
-رمز التحقق الخاص بك هو: ${verificationCode}
+Your verification code is: ${verificationCode}
 
-الرمز صالح لمدة 10 دقائق فقط.
+The code is valid for 10 minutes only.
 
-مهم: بعد تأكيد بريدك الإلكتروني، سيتم مراجعة حسابك من قبل الإدارة قبل تفعيل مكافأة الترحيب.
+Important: After confirming your email, your account will be reviewed by the admin before activating the welcome bonus.
 
 © 2022 PromoHive
         `
@@ -165,7 +164,7 @@ serve(async (req) => {
 
     return new Response(JSON.stringify({
       success: true,
-      message: "تم إرسال رمز التحقق إلى بريدك الإلكتروني",
+      message: "Verification code has been sent to your email",
       emailId: resendData.id
     }), {
       headers: {
@@ -178,7 +177,7 @@ serve(async (req) => {
     console.error("Send verification email error:", error);
     
     return new Response(JSON.stringify({
-      error: "فشل في إرسال رمز التحقق. يرجى المحاولة مرة أخرى.",
+      error: "Failed to send verification code. Please try again.",
       details: error.message
     }), {
       status: 500,
