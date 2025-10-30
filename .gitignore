@@ -1,0 +1,16 @@
+# Node / pnpm
+node_modules/
+.pnpm-store/
+pnpm-lock.yaml
+
+# Build outputs
+dist/
+promohive/dist/
+
+# Env files (keep secret values in Netlify environment variables)
+.env
+promohive/.env
+
+# OS / editors
+.DS_Store
+.vscode/
