@@ -36,7 +36,7 @@ serve(async (req) => {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        from: "onboarding@resend.dev",
+        from: "promohive@globalpromonetwork.store",
         to: [email],
         subject: "Email Verification - PromoHive",
         html: `
