@@ -145,19 +145,16 @@ NOTIFY pgrst, 'reload schema';
 
 -- Step 9: Verify functions exist
 SELECT 
-    'Function: ' || routine_name || '(' || 
-    COALESCE(string_agg(parameter_name || ' ' || data_type, ', '), 'no params') || 
-    ') -> ' || data_type as info
+    routine_name as function_name,
+    routine_type,
+    routines.data_type as return_type
 FROM information_schema.routines
-LEFT JOIN information_schema.parameters 
-    ON routines.specific_name = parameters.specific_name
 WHERE routine_schema = 'public'
 AND routine_name IN (
     'create_verification_code',
     'verify_email_code',
     'generate_verification_code'
 )
-GROUP BY routine_name, routines.data_type
 ORDER BY routine_name;
 
 -- Success message
