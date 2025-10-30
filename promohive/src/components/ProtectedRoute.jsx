@@ -27,7 +27,7 @@ const ProtectedRoute = ({ children, requireAdmin = false }) => {
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-          <p className="text-text-secondary">جاري التحقق من الصلاحيات...</p>
+          <p className="text-text-secondary">Verifying permissions...</p>
         </div>
       </div>
     );
@@ -47,23 +47,23 @@ const ProtectedRoute = ({ children, requireAdmin = false }) => {
             <Icon name="ShieldX" size={32} className="text-destructive" />
           </div>
           <h2 className="text-2xl font-bold text-foreground mb-2">
-            غير مصرح بالوصول
+            Access Denied
           </h2>
           <p className="text-text-secondary mb-6">
-            عذراً، لا تملك صلاحيات الوصول إلى هذه الصفحة. هذه الصفحة مخصصة للمسؤولين فقط.
+            Sorry, you don't have permission to access this page. This page is for administrators only.
           </p>
-          <div className="flex space-x-3 rtl:space-x-reverse">
+          <div className="flex space-x-3">
             <button
               onClick={() => window.history.back()}
               className="flex-1 px-4 py-2 rounded-lg bg-muted hover:bg-muted/80 text-foreground transition-colors"
             >
-              رجوع
+              Go Back
             </button>
             <button
               onClick={() => window.location.href = '/user-dashboard'}
               className="flex-1 px-4 py-2 rounded-lg bg-primary hover:bg-primary/90 text-white transition-colors"
             >
-              لوحة التحكم
+              Dashboard
             </button>
           </div>
         </div>

@@ -99,7 +99,7 @@ const UsersManagement = () => {
       });
     } catch (error) {
       console.error('Error fetching users:', error);
-      alert('خطأ في تحميل بيانات المستخدمين: ' + error.message);
+      alert('Error loading users data: ' + error.message);
     } finally {
       setLoading(false);
     }
@@ -164,31 +164,31 @@ const UsersManagement = () => {
         const result = await adminService.approveUser(userId, user?.id);
         
         if (result.success) {
-          alert('✅ تم قبول المستخدم بنجاح');
+          alert('✅ User approved successfully');
           // Refresh users list
           await fetchUsers();
         } else {
-          alert('❌ خطأ في قبول المستخدم: ' + result.error);
+          alert('❌ Error approving user: ' + result.error);
         }
       } else if (action === 'suspend' || action === 'reject') {
-        const reason = prompt('الرجاء إدخال سبب الرفض/التعليق (اختياري):');
+        const reason = prompt('Please enter reason for rejection/suspension (optional):');
         const result = await adminService.rejectUser(userId, user?.id, reason || '');
         
         if (result.success) {
-          alert('✅ تم رفض/تعليق المستخدم بنجاح');
+          alert('✅ User rejected/suspended successfully');
           // Refresh users list
           await fetchUsers();
         } else {
-          alert('❌ خطأ في رفض/تعليق المستخدم: ' + result.error);
+          alert('❌ Error rejecting/suspending user: ' + result.error);
         }
       } else if (action === 'message') {
         // Handle message action
         console.log('Send message to user:', userId);
-        alert('ميزة إرسال الرسائل قيد التطوير');
+        alert('Messaging feature is under development');
       }
     } catch (error) {
       console.error('Error handling user action:', error);
-      alert('❌ خطأ في تنفيذ العملية: ' + error.message);
+      alert('❌ Error executing operation: ' + error.message);
     } finally {
       setActionLoading(false);
     }

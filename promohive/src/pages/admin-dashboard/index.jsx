@@ -130,7 +130,7 @@ const AdminDashboard = () => {
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-          <p className="text-text-secondary">جاري تحميل لوحة التحكم...</p>
+          <p className="text-text-secondary">Loading dashboard...</p>
         </div>
       </div>
     );
@@ -142,13 +142,13 @@ const AdminDashboard = () => {
       <div className="min-h-screen bg-background flex items-center justify-center p-4">
         <div className="glass rounded-2xl p-8 max-w-md w-full text-center">
           <Icon name="AlertCircle" size={48} className="text-destructive mx-auto mb-4" />
-          <h2 className="text-xl font-bold text-foreground mb-2">خطأ في تحميل البيانات</h2>
+          <h2 className="text-xl font-bold text-foreground mb-2">Error Loading Data</h2>
           <p className="text-text-secondary mb-6">{error}</p>
           <button
             onClick={fetchDashboardData}
             className="px-6 py-2 bg-primary hover:bg-primary/90 text-white rounded-lg transition-colors"
           >
-            إعادة المحاولة
+            Retry
           </button>
         </div>
       </div>
