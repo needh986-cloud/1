@@ -221,10 +221,10 @@ const UsersManagement = () => {
           }
         }
         
-        alert(`✅ تم قبول ${successCount} مستخدم بنجاح${errorCount > 0 ? `\n❌ فشل قبول ${errorCount} مستخدم` : ''}`);
+        alert(`✅ Successfully approved ${successCount} user(s)${errorCount > 0 ? `\n❌ Failed to approve ${errorCount} user(s)` : ''}`);
         await fetchUsers();
       } else if (action === 'suspend' || action === 'reject') {
-        const reason = prompt('الرجاء إدخال سبب الرفض/التعليق (اختياري):');
+        const reason = prompt('Please enter rejection reason (optional):');
         
         let successCount = 0;
         let errorCount = 0;
@@ -238,22 +238,22 @@ const UsersManagement = () => {
           }
         }
         
-        alert(`✅ تم رفض/تعليق ${successCount} مستخدم بنجاح${errorCount > 0 ? `\n❌ فشل رفض ${errorCount} مستخدم` : ''}`);
+        alert(`✅ Successfully rejected/suspended ${successCount} user(s)${errorCount > 0 ? `\n❌ Failed to reject ${errorCount} user(s)` : ''}`);
         await fetchUsers();
       } else if (action === 'message') {
         // Handle bulk message
         console.log('Send bulk message:', data);
-        alert('ميزة إرسال الرسائل الجماعية قيد التطوير');
+        alert('Bulk messaging feature is under development');
       } else if (action === 'export') {
         // Handle export
         console.log('Export users:', userIds);
-        alert('ميزة التصدير قيد التطوير');
+        alert('Export feature is under development');
       }
 
       setSelectedUsers([]);
     } catch (error) {
       console.error('Error in bulk action:', error);
-      alert('❌ خطأ في تنفيذ العملية الجماعية: ' + error.message);
+      alert('❌ Error executing bulk operation: ' + error.message);
     } finally {
       setActionLoading(false);
       setIsBulkModalOpen(false);
